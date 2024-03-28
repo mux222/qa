@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة مافيا</title>
+    <style>
+        body {
+            background-color: #1a1a1a; /* لون خلفية داكن */
+            font-family: 'Arial', sans-serif; /* خط عادي */
+            color: #ff6666; /* لون النصوص باللون الأحمر الدموي */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0; /* إزالة هوامش الصفحة */
+        }
+
+        .container {
+            background-color: #333; /* لون خلفية العنصر باللون الأسود */
+            border-radius: 20px; /* زوايا مستديرة وأكبر */
+            box-shadow: 0 0 20px rgba(255, 102, 102, 0.5); /* ظل دموي */
+            padding: 40px; /* زيادة التباعد الداخلي */
+            text-align: center; /* لوضع النصوص في الوسط */
+            max-width: 800px; /* تحديد العرض الأقصى */
+            width: 80%; /* جعل العنصر يأخذ عرضًا أقل قليلاً للتأكد من الوسطية */
+            height: 85%; /* تحديد الارتفاع بنسبة مئوية */
+        }
+
+        h1 {
+            color: #ff6666; /* لون العنوان باللون الأحمر الدموي */
+        }
+
+        h2, h3 {
+            color: #ff6666; /* لون العناوين الثانوية باللون الأحمر الدموي */
+        }
+
+        p {
+            color: #ff6666; /* لون الفقرات باللون الأحمر الدموي */
+        }
+
+        .button {
+            background-color: #8B0000; /* لون الخلفية للزر */
+            color: #fff; /* لون النص في الزر */
+            padding: 15px 30px; /* تعديل التباعد الداخلي */
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease; /* تأثير التحول */
+            font-size: 16px; /* حجم الخط */
+        }
+
+        .button:hover {
+            background-color: #B22222; /* لون الخلفية عند التحويل */
+        }
+
+        #roles {
+            border-top: 1px solid #ff6666; /* لون الخط */
+            margin: 20px 0; /* تحديد المسافة حول الخط */
+            margin-top: 105px; /* تحديد المسافة بين قائمة اللاعبين وعرض الأدوار */
+            text-align: center; /* وضع النص في الوسط */
+            font-style: italic; /* نمط خط المائل */
+            color: #ff6666; /* لون النص */
+        }
+
+        #confirmPlayersButton {
+            background-color: #B22222; /* لون خلفية الزر "تأكيد عدد اللاعبين" */
+            color: #000; /* لون النص في الزر */
+        }
+
+        #assignRolesButton {
+            background-color: #B22222; /* لون خلفية الزر "تخصيص الأدوار" */
+            color: #000; /* لون النص في الزر */
+        }
+
+        /* تكبير حجم مربع إدخال اللاعبين */
+        #playerCount {
+            padding: 15px; /* زيادة التباعد الداخلي لتكبير المربع */
+            font-size: 20px; /* زيادة حجم الخط للوصول إلى حجم أكبر */
+            border-radius: 8px; /* تدوير الزوايا لمظهر مستدير */
+            border: 2px solid #ff6666; /* تغيير لون الحدود */
+            background-color: #1a1a1a; /* تغيير لون الخلفية ليكون متناسقًا */
+            color: #ff6666; /* تغيير لون النص */
+            width: 300px; /* ضبط العرض لجعل المربع أكبر */
+            margin-bottom: 20px; /* زيادة المسافة بين مربع الإدخال والأزرار */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>لعبة مافيا</h1>
+        <p>أدخل عدد اللاعبين واضغط على الزر لتخصيص الأدوار:</p>
+        <input type="number" id="playerCount" placeholder="عدد اللاعبين">
+        <button id="confirmPlayersButton" class="button" onclick="generatePlayersAndShuffle()">تأكيد العدد</button>
+        <button id="assignRolesButton" class="button" onclick="assignRolesAndUpdate()">تخصيص الأدوار</button>
+        <div id="playersList"></div>
+        <div id="roles"></div> <!-- هنا سيتم عرض أدوار اللاعبين -->
+        <button id="nextPlayerButton" style="display: none;" class="button" onclick="togglePlayer()">الاعب التالي</button>
+        <button id="resetButton" style="display: none;" class="button" onclick="resetGame()">إعادة الترتيب والبدء من جديد</button>
+    </div>
+
+    <audio id="clickSound" src="C:\Users\abote\Downloads\KL.mp3" volume="0.3"></audio>
+
+    <script>
+        let players = [];
+        let roles = ["دكتور", "شايب", "مافيا", "مافيا", "مواطن", "مواطن"];
+        let currentPlayerIndex = 0;
+        let copAssigned = false;
+        let doctorAssigned = false;
+
+        // Function to shuffle array elements randomly
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function generatePlayersAndShuffle() {
+            let playerCount = document.getElementById("playerCount").value.trim();
+            if (playerCount !== "" && !isNaN(playerCount) && playerCount > 1) {
+                players = []; // Reset players array
+                for (let i = 1; i <= playerCount; i++) {
+                    players.push({name: "لاعب " + i, role: ""}); // Assign numerical names to players
+                }
+                renderPlayersList();
+                document.getElementById("playerCount").value = "";
+            } else {
+                alert("الرجاء إدخال عدد لاعبين صحيح وأكبر من واحد.");
+            }
+        }
+
+        function assignRolesAndUpdate() {
+            if (players.length < 2) {
+                alert("يجب أن يكون هناك على الأقل لاعبان لبدء اللعبة.");
+                return false;
+            }
+            copAssigned = false; // Reset variables
+            doctorAssigned = false;
+            roles = shuffleArray(roles); // Shuffle roles array
+            for (let i = 0; i < players.length; i++) {
+                let roleIndex = Math.floor(Math.random() * roles.length);
+                let role = roles[roleIndex];
+                if (role === "دكتور" && !doctorAssigned) {
+                    players[i].role = role;
+                    doctorAssigned = true;
+                    roles.splice(roleIndex, 1); // Remove doctor role from available roles
+                } else if (role === "شايب" && !copAssigned) {
+                    players[i].role = role;
+                    copAssigned = true;
+                    roles.splice(roleIndex, 1); // Remove cop role from available roles
+                } else if (role === "مافيا") {
+                    players[i].role = role;
+                    roles.splice(roleIndex, 1); // Remove mafia role from available roles
+                } else {
+                    players[i].role = "مواطن";
+                }
+            }
+            renderRoles();
+            document.getElementById("nextPlayerButton").style.display = "block";
+            document.getElementById("resetButton").style.display = "none";
+            return false; // Prevent page reload
+        }
+
+        function togglePlayer() {
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            renderRoles();
+            if (currentPlayerIndex === 0) {
+                document.getElementById("resetButton").style.display = "block";
+                document.getElementById("nextPlayerButton").style.display = "none";
+                alert("تم توزيع جميع الأدوار اعطي الجوال للحكم.");
+            }
+        }
+
+        function resetGame() {
+            roles = ["دكتور", "شايب", "مافيا", "مافيا", "مواطن", "مواطن"]; // Reset roles array
+            assignRolesAndUpdate(); // Reassign roles
+            currentPlayerIndex = 0;
+            document.getElementById("resetButton").style.display = "none";
+            document.getElementById("nextPlayerButton").style.display = "block";
+        }
+
+        function renderRoles() {
+            let player = players[currentPlayerIndex];
+            let rolesHTML = "<div class='playerBox'><div class='playerName'>" + player.name + "</div>";
+
+            if (player.role !== undefined) {
+                rolesHTML += "<div class='playerRole'>" + player.role + "</div>";
+            }
+
+            rolesHTML += "</div>";
+
+            document.getElementById("roles").innerHTML = rolesHTML;
+        }
+
+        function renderPlayersList() {
+            let playersListHTML = "";
+            for (let i = 0; i < players.length; i++) {
+                let playerName = players[i].name;
+                playersListHTML += "<p>" + playerName + "</p>";
+            }
+            document.getElementById("playersList").innerHTML = playersListHTML;
+        }
+    </script>
+
+    <script>
+        document.getElementById("confirmPlayersButton").addEventListener("click", function() {
+            var clickSound = document.getElementById("clickSound");
+            clickSound.play();
+        });
+
+        document.getElementById("assignRolesButton").addEventListener("click", function() {
+            var clickSound = document.getElementById("clickSound");
+            clickSound.play();
+        });
+
+        document.getElementById("nextPlayerButton").addEventListener("click", function() {
+            var clickSound = document.getElementById("clickSound");
+            clickSound.play();
+        });
+
+        document.getElementById("resetButton").addEventListener("click", function() {
+            var clickSound = document.getElementById("clickSound");
+            clickSound.play();
+        });
+    </script>
+</body>
+</html>
